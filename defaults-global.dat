@@ -1,0 +1,17 @@
+# structure is country.chapter.option=value, where
+# country is the name of the country used in the analyses
+# chapter is the group of options, typically shortened, unique version of the function where the option is used
+# option  is the name of the option, possibly shortened, used by the function
+# value   is the values passed forward to the function, interpreted as string
+#
+# by default, for Finnish data, use A-MOMO output
+fi.mort.type=txt
+fi.momo.root=/group/infestat/www/momo/asis
+fi.momo.country=Finland
+fi.mort.ext=dat
+fi.weather.station=29780
+# by default, for Portugese data, use file
+pt.mort.type=txt
+pt.mort.ext=txt
+pt.mort.start=1900-1-1
+# end
