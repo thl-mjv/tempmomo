@@ -30,18 +30,20 @@ with(sites,table(Europe,EuropeProper))
 ## TODO (20150109) Make sure end of year goes smoothly
 use.this.year<-TRUE # TODO: from defaults
 use.lag<-1          # TODO: from defaults
-(years<-as.numeric(format(Sys.Date(),"%Y"))-8:(!use.this.year))
+print(years<-as.numeric(format(Sys.Date(),"%Y"))-8:(!use.this.year))
 ## Files we already got
 files<-list.files(path="download/",patt=".rda",full=TRUE)
 times<-sapply(files,file.mtime)
 names(times)<-gsub("download//","",gsub("[.]rda","",files))
-(times<-(sort((times[match(european.countries,names(times))]-as.numeric(Sys.time()))/(24*3600))))
+print(times<-(sort((times[match(european.countries,names(times))]-as.numeric(Sys.time()))/(24*3600))))
 ### All European countries
 ### TODO: should we just concentrate on those that have not been updated after last Sunday?
 ###       also, size does matter.
 set.seed(Sys.time()) # we don't mind fully random order: this is a hash, not simulation
 ### Do in the reverse order of need
-for(i in names(times)) {
+dothese<-names(times)
+#dothese<-"LU"
+for(i in dothese) {
     cat(as.character(Sys.time()),":",i,"START --------------------------------------\n")
     savefile<-paste("download/",i,".rda",sep="")
     if(file.exists(savefile)) old<-readRDS(savefile) else old<-NULL
@@ -66,6 +68,7 @@ for(i in names(times)) {
         tmp<-old
         cur.date<-last.date
     }
+    cat("cur",as.character(cur.date),"last",as.character(last.date),"now",as.character(Sys.Date()),"\n")
     ### did anything change?
     if(cur.date>last.date) {
         cat(as.character(Sys.time()),":",i,"Saving new version\n")
@@ -73,6 +76,8 @@ for(i in names(times)) {
         try(tmp$year<-as.numeric(substring(wk,1,4)))
         try(tmp$week<-as.numeric(substring(wk,7,9)))
         saveRDS(tmp,file=savefile)
+    } else {
+        cat(as.character(Sys.time()),":",i,"not saving new version\n")
     }
     ## do we have the stata file? If we do, should we update
     statafile<-paste("out/daily-",ii,".dta",sep="")
@@ -83,6 +88,8 @@ for(i in names(times)) {
         try(writeStatas(datas,"daily",select=ii)) # only write the stata files if truly changed!
         ## copy these to output place somewhere determined by defaults-local.txt
         system(paste("cp ",statafile," ",getOption("tempmomo")$all$out$dir,sep=""))
+    } else {
+        cat(as.character(Sys.time()),":",i," Stata already done\n")
     }
     cat(as.character(Sys.time()),":",i,"END ---------------------\n\n")
 }
