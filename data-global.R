@@ -40,6 +40,9 @@ print(times<-(sort((times[match(european.countries,names(times))]-as.numeric(Sys
 ### TODO: should we just concentrate on those that have not been updated after last Sunday?
 ###       also, size does matter.
 set.seed(Sys.time()) # we don't mind fully random order: this is a hash, not simulation
+### Basepath
+basepath<-"/group/biometry/data/noaa" ## FIX: defaults
+if(!file.exists(basepath)) basepath<-"."
 ### Do in the reverse order of need
 dothese<-names(times)
 #dothese<-"LU"
@@ -61,7 +64,7 @@ for(i in dothese) {
     ## ALSO FIXME: SHOULD USE (last day of year<last update) (in noaaGetCountry)
     if(as.numeric(Sys.Date()-last.date)>use.lag) { 
         cat(as.character(Sys.time()),":",i,as.character(last.date),": downloading:\n")
-        print(system.time(tmp<-noaaGetCountry(i,force=FALSE,years=years,uplag=use.lag,thisy=use.this.year,countrycode="NUTS0i")))
+        print(system.time(tmp<-noaaGetCountry(i,force=FALSE,years=years,uplag=use.lag,thisy=use.this.year,countrycode="NUTS0i",basepath=basepath)))
         cur.date<-attr(tmp,"downloaded")
     } else {
         cat(as.character(Sys.time()),":",i,as.character(last.date),": using previous\n")
