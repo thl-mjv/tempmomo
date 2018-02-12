@@ -22,6 +22,9 @@ loadDefaults()
 ### A bit of existentialism: What is Europe?
 with(sites,table(Europe,EuropeProper))
 
+### Basepath
+basepath<-"/group/biometry/data/noaa" ## FIX: defaults
+if(!file.exists(basepath)) basepath<-"."
 ### Load data. This will take time, especially first time.
 ### A version of this data will be made available at 
 ### "https://owncloud.thl.fi/public.php?service=files&t=a3512ac71e9ab593421171843af081c5"
@@ -32,23 +35,20 @@ use.this.year<-TRUE # TODO: from defaults
 use.lag<-1          # TODO: from defaults
 print(years<-as.numeric(format(Sys.Date(),"%Y"))-8:(!use.this.year))
 ## Files we already got
-files<-list.files(path="download/",patt=".rda",full=TRUE)
+files<-list.files(path=paste0(basepath,"/download/"),patt=".rda",full=TRUE)
 times<-sapply(files,file.mtime)
-names(times)<-gsub("download//","",gsub("[.]rda","",files))
+names(times)<-gsub(".*download//","",gsub("[.]rda","",files))
 print(times<-(sort((times[match(european.countries,names(times))]-as.numeric(Sys.time()))/(24*3600))))
 ### All European countries
 ### TODO: should we just concentrate on those that have not been updated after last Sunday?
 ###       also, size does matter.
 set.seed(Sys.time()) # we don't mind fully random order: this is a hash, not simulation
-### Basepath
-basepath<-"/group/biometry/data/noaa" ## FIX: defaults
-if(!file.exists(basepath)) basepath<-"."
 ### Do in the reverse order of need
 dothese<-names(times)
 #dothese<-"LU"
 for(i in dothese) {
     cat(as.character(Sys.time()),":",i,"START --------------------------------------\n")
-    savefile<-paste("download/",i,".rda",sep="")
+    savefile<-paste(basepath,"/download/",i,".rda",sep="")
     if(file.exists(savefile)) old<-readRDS(savefile) else old<-NULL
     ii<-tolower(i)
     if(!is.null(old)) {
