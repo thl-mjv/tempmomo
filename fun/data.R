@@ -123,7 +123,7 @@ noaaMapRegions<-function(sites,map,level=0,type=c("inarea","distance","bestquess
 #' @param uplag    how old files should be updated, days
 #' @param basepath where the cached files should go
 noaaGetSiteYear<-function(site,year=2013,force=FALSE,thisy=TRUE,uplag=0,basepath=NULL) {
-    file<-paste(site,"-99999-",year,".op.gz",sep="")
+    file<-paste(site,"-",year,".op.gz",sep="")
     url <-paste("ftp://ftp.ncdc.noaa.gov/pub/data/gsod/",year,"/",file,sep="")
     if(is.null(basepath)) basepath<-"."
     down<-paste(basepath,"/download/",file,sep="")
@@ -143,37 +143,59 @@ noaaGetSiteYear<-function(site,year=2013,force=FALSE,thisy=TRUE,uplag=0,basepath
         if(inherits(err,"try-err"))
             stop("could not download file")
     }
-    data<-read.fwf(gzfile(down),header=FALSE,skip=1,as.is=TRUE,
-                   widths=diff(c(0,6,12,22,30,33,41,44,52,55,63,66,73,76,83,86,93,100,108,109,116,117,123,124,130,138)),
-                   col.names=c("site","wban","yearmoda","temp","tempc","dewp","dewpc","slp","slpc","stp","stpc","visib","visibc",
-                       "wdsp","wdspc","mxspd","gust",
-                       "max","maxf","min","minf","prcp","prcpf","sndp","frshtt"))
-    try(data$date <-as.Date(as.character(data$yearmoda),"%Y%m%d"))
-    try(data$temp <-to.cels(data$temp))
-    try(data$dewp <-to.cels(data$dewp))
-    try(data$max  <-to.cels(data$max ))
-    try(data$min  <-to.cels(data$min ))
-    try(data$slp  <-to.na.0(data$slp,9999.9))
-    try(data$stp  <-to.na.0(data$stp,9999.9))
-    try(data$visib<-to.na.0(data$visib,999.9)*1.609344)
-    try(data$wdsp <-to.na.0(data$wdsp ,999.9)*0.1852)
-    try(data$mxspd<-to.na.0(data$mxspd,999.9)*0.1852)
-    try(data$gust <-to.na.0(data$gust ,999.9)*0.1852)
-    try(data$prcp <-to.na.0(data$prcp ,99.99)*25.4)
-    try(data$sndp <-na.0(to.na.0(data$sndp ,999.9)*25.4))
-    try(data$frshtt<-sprintf("%06d",data$frshtt))
-    try(data$fog  <-as.numeric(substring(data$frshtt,1,1)))
-    try(data$rain <-as.numeric(substring(data$frshtt,2,2)))
-    try(data$snow <-as.numeric(substring(data$frshtt,3,3)))
-    try(data$hail <-as.numeric(substring(data$frshtt,4,4)))
-    try(data$thun <-as.numeric(substring(data$frshtt,5,5)))
-    try(data$torn <-as.numeric(substring(data$frshtt,6,6)))
-    thissite<-subset(sites,sprintf("%06d",usaf)==site)
-    if(nrow(thissite)==0) cat("Site",site,"not found in sites\n")
-    try(data$pop0 <-rep(mean(thissite$pop0),nrow(data)))
-    try(data$pop3 <-rep(mean(thissite$pop3),nrow(data)))
-    try(data$nuts3<-rep(as.character(thissite$NUTS3i[1]),nrow(data)))
-    attr(data,"downloaded")<-na.0(lastupd,Sys.Date())
+    data<-try(read.fwf(gzfile(down),header=FALSE,skip=1,as.is=TRUE,
+                       widths=diff(c(0,6,12,22,30,33,41,44,52,55,63,66,73,76,83,86,93,100,108,109,116,117,123,124,130,138)),
+                       col.names=c("site","wban","yearmoda","temp","tempc","dewp","dewpc","slp","slpc","stp","stpc","visib","visibc",
+                                   "wdsp","wdspc","mxspd","gust",
+                                   "max","maxf","min","minf","prcp","prcpf","sndp","frshtt")))
+    if(!inherits(data,"try-error")) {
+        try(data$date <-as.Date(as.character(data$yearmoda),"%Y%m%d"))
+        try(data$temp <-to.cels(data$temp))
+        try(data$dewp <-to.cels(data$dewp))
+        try(data$max  <-to.cels(data$max ))
+        try(data$min  <-to.cels(data$min ))
+        try(data$slp  <-to.na.0(data$slp,9999.9))
+        try(data$stp  <-to.na.0(data$stp,9999.9))
+        try(data$visib<-to.na.0(data$visib,999.9)*1.609344)
+        try(data$wdsp <-to.na.0(data$wdsp ,999.9)*0.1852)
+        try(data$mxspd<-to.na.0(data$mxspd,999.9)*0.1852)
+        try(data$gust <-to.na.0(data$gust ,999.9)*0.1852)
+        try(data$prcp <-to.na.0(data$prcp ,99.99)*25.4)
+        try(data$sndp <-na.0(to.na.0(data$sndp ,999.9)*25.4))
+        try(data$frshtt<-sprintf("%06d",data$frshtt))
+        try(data$fog  <-as.numeric(substring(data$frshtt,1,1)))
+        try(data$rain <-as.numeric(substring(data$frshtt,2,2)))
+        try(data$snow <-as.numeric(substring(data$frshtt,3,3)))
+        try(data$hail <-as.numeric(substring(data$frshtt,4,4)))
+        try(data$thun <-as.numeric(substring(data$frshtt,5,5)))
+        try(data$torn <-as.numeric(substring(data$frshtt,6,6)))
+        thissite<-subset(sites,sprintf("%06d-%05d",usaf,wban)==site)
+        if(nrow(thissite)==0) cat("Site",site,"not found in sites\n")
+        try(data$pop0 <-rep(mean(thissite$pop0),nrow(data)))
+        try(data$pop3 <-rep(mean(thissite$pop3),nrow(data)))
+        try(data$nuts3<-rep(as.character(thissite$NUTS3i[1]),nrow(data)))
+        attr(data,"downloaded")<-na.0(lastupd,Sys.Date())
+    } else {
+        ## empty structure
+        data<-structure(list(site = integer(0), wban = integer(0), yearmoda = integer(0), 
+                             temp = numeric(0), tempc = integer(0), dewp = numeric(0), 
+                             dewpc = integer(0), slp = numeric(0), slpc = integer(0), 
+                             stp = numeric(0), stpc = integer(0), visib = numeric(0), 
+                             visibc = integer(0), wdsp = numeric(0), wdspc = integer(0), 
+                             mxspd = numeric(0), gust = numeric(0), max = numeric(0), 
+                             maxf = character(0), min = numeric(0), minf = character(0), 
+                             prcp = numeric(0), prcpf = character(0), sndp = numeric(0), 
+                             frshtt = character(0), date = structure(numeric(0), class = "Date"), 
+                             fog = numeric(0), rain = numeric(0), snow = numeric(0), hail = numeric(0), 
+                             thun = numeric(0), torn = numeric(0), pop0 = numeric(0), 
+                             pop3 = numeric(0), nuts3 = character(0)),
+                        .Names = c("site", 
+                                   "wban", "yearmoda", "temp", "tempc", "dewp", "dewpc", "slp", 
+                                   "slpc", "stp", "stpc", "visib", "visibc", "wdsp", "wdspc", "mxspd", 
+                                   "gust", "max", "maxf", "min", "minf", "prcp", "prcpf", "sndp", 
+                                   "frshtt", "date", "fog", "rain", "snow", "hail", "thun", "torn", 
+                                   "pop0", "pop3", "nuts3"), downloaded = 17302, row.names = integer(0), class = "data.frame")
+    }
     data
 }
 
@@ -202,7 +224,7 @@ noaaGetCountry<-function(usecountry="FI",years=2008:2013,sitesdata=sites,force=F
     res<-list()
     for(i in years) {
         ## kludge: if either begin or end is missing, use anyways
-        ysites<-with(subset(csites,na.0(format(begin,"%Y"),"9999")<=i & na.0(format(end,"%Y"),"0") >= i),sprintf("%06d",usaf))
+        ysites<-with(subset(csites,na.0(format(begin,"%Y"),"9999")<=i & na.0(format(end,"%Y"),"0") >= i),sprintf("%06d-%05d",usaf,wban))
         cat(length(ysites),"stations year",i,"\n")
         yres<-list()
         for(j in ysites) {
@@ -441,7 +463,7 @@ loadMortDataStata<-function(country) {
 #' @param data a list of data frames
 #' @param name optionally names of the elements to output
 #' @param stata path to stata executable
-writeStatas<-function(data,name=NULL,select=NULL,stata=NULL) {
+writeStatas<-function(data,name=NULL,select=NULL,stata=NULL,basepath="./") {
     require("foreign")
     if(is.null(name)) name<-names(data)
     if(is.null(select)) select<-names(data)
@@ -449,7 +471,10 @@ writeStatas<-function(data,name=NULL,select=NULL,stata=NULL) {
     if(!file.exists(stata)) stata<-NULL
     for(i in select) {
         if(i %in% names(data)) {
-            cat(i,"... ")
+            codefile<-paste(basepath,"/out/",name,"-",i,".base.do",sep="")
+            datafile<-paste(basepath,"/out/",name,"-",i,".dat",sep="")
+            dodofile<-paste(basepath,"/out/",name,"-",i,".do",sep="")
+            cat(i,codefile, datafile,"... ")
             names(data[[i]])<-gsub("[.]","_",names(data[[i]]))
             cls<-sapply(data[[i]],data.class)
             dts<-names(cls[cls=="Date"])
@@ -457,23 +482,22 @@ writeStatas<-function(data,name=NULL,select=NULL,stata=NULL) {
                 data[[i]][[j]]<-as.numeric(data[[i]][[j]]-as.Date("1960-1-1"))
             }
             write.foreign(data[[i]],
-                          datafile=paste("out/",name,"-",i,".dat",sep=""),
-                          codefile=paste("out/",name,"-",i,".base.do",sep=""),
+                          datafile=datafile,
+                          codefile=codefile,
                           package="Stata")
-            cat("set mem 1000m\n",
-                file=paste("out/",name,"-",i,".do",sep=""),append=FALSE,sep="")
-            cat(readLines(paste("out/",name,"-",i,".base.do",sep="")),"\n",
-                file=paste("out/",name,"-",i,".do",sep=""),append=TRUE,sep="")
+            cat("set mem 1000m\n",file=dodofile,append=FALSE,sep="")
+            cat(readLines(codefile),"\n",
+                file=dodofile,append=TRUE,sep="")
             cat("label data \"data for ",i,", uploaded at ",format(Sys.time()),"\"\n",
-                file=paste("out/",name,"-",i,".do",sep=""),append=TRUE,sep="")
+                file=dodofile,append=TRUE,sep="")
             for(j in dts) {
-                cat("format ",j," %td\n",file=paste("out/",name,"-",i,".do",sep=""),append=TRUE,sep="")
+                cat("format ",j," %td\n",file=dodofile,append=TRUE,sep="")
             }
             ## TODO: variable labels
-            cat("save  out/",name,"-",i,",replace\n",
-                file=paste("out/",name,"-",i,".do",sep=""),append=TRUE,sep="")
+            cat("save  ",basepath,"/out/",name,"-",i,",replace\n",
+                file=dodofile,append=TRUE,sep="")
             if(!is.null(stata)) {
-                cmd<-paste(stata," -bq \"do out/",name,"-", i, ".do;exit\"", sep = "")
+                cmd<-paste(stata," -bq \"do ",dodofile,";exit\"", sep = "")
                 cat(cmd,"\n")
                 system(cmd)
             }

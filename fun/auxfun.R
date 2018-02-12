@@ -47,3 +47,16 @@ mkpar<-function(n,row=TRUE) {
     mn<-ceiling(sqrt(n))
     if(row) c(ceiling(n/mn),mn) else c(mn,ceiling(n/mn))
 }
+### check options
+tempoption<-function(country="all",chapter="momo",option="",default=NA) {
+    opt<-getOption("tempmomo")
+    val<-NULL
+    if(country%in%names(opt))
+        if(chapter%in%names(opt[[country]]))
+            if(option%in%names(opt[[country]][[chapter]]))
+                val<-opt[[country]][[chapter]][[option]]
+    if(is.null(val)) val<-default
+    if(is.numeric(default)) val<-as.numeric(val)
+    if(is.logical(default)) val<-as.numeric(val)!=0
+    val
+}

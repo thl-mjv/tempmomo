@@ -14,4 +14,6 @@ fi.weather.station=29780
 pt.mort.type=txt
 pt.mort.ext=txt
 pt.mort.start=1900-1-1
-# end
+# global
+all.years.this=1
+all.years.lag=1
