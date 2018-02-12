@@ -14,6 +14,7 @@ sites<-noaaGetSites(FALSE)
 
 ### load the defaults
 loadDefaults()
+print(getOption("tempmomo")$all)
 
 ### DON'T load previously downloaded data, if exists
 ### Instead use country specific files so that we have OS level assurance of the date of creation
@@ -28,27 +29,25 @@ with(sites,table(Europe,EuropeProper))
 ### No list of all countries
 ## if(!exists("datas")) datas<-list()
 ## TODO (20150109) Make sure end of year goes smoothly
-use.this.year<-TRUE # TODO: from defaults
-use.lag<-1          # TODO: from defaults
+print(use.this.year<-tempoption("all","years","this",FALSE)) # DONE: from defaults
+print(use.lag      <-tempoption("all","years","lag" ,1    )) # DONE: from defaults getOption("tempmomo")$all$years$lag)  # DONE: from defaults
 print(years<-as.numeric(format(Sys.Date(),"%Y"))-8:(!use.this.year))
+print(basepath     <-tempoption("all","download","dir","./"))# DONE: from defaults
 ## Files we already got
-files<-list.files(path="download/",patt=".rda",full=TRUE)
+files<-list.files(path=paste0(basepath,"/download/"),patt=".rda",full=TRUE)
 times<-sapply(files,file.mtime)
-names(times)<-gsub("download//","",gsub("[.]rda","",files))
+names(times)<-gsub(".*/download//","",gsub("[.]rda","",files))
 print(times<-(sort((times[match(european.countries,names(times))]-as.numeric(Sys.time()))/(24*3600))))
 ### All European countries
 ### TODO: should we just concentrate on those that have not been updated after last Sunday?
 ###       also, size does matter.
 set.seed(Sys.time()) # we don't mind fully random order: this is a hash, not simulation
-### Basepath
-basepath<-"/group/biometry/data/noaa" ## FIX: defaults
-if(!file.exists(basepath)) basepath<-"."
 ### Do in the reverse order of need
 dothese<-names(times)
 #dothese<-"LU"
 for(i in dothese) {
     cat(as.character(Sys.time()),":",i,"START --------------------------------------\n")
-    savefile<-paste("download/",i,".rda",sep="")
+    savefile<-paste(basepath,"/download/",i,".rda",sep="")
     if(file.exists(savefile)) old<-readRDS(savefile) else old<-NULL
     ii<-tolower(i)
     if(!is.null(old)) {
@@ -83,14 +82,14 @@ for(i in dothese) {
         cat(as.character(Sys.time()),":",i,"not saving new version\n")
     }
     ## do we have the stata file? If we do, should we update
-    statafile<-paste("out/daily-",ii,".dta",sep="")
+    statafile<-paste(basepath,"/out/daily-",ii,".dta",sep="")
     if(cur.date>last.date | !file.exists(statafile)) {
         cat(as.character(Sys.time()),":",i,"Stata\n")
         datas<-list(tmp)
         names(datas)<-ii
-        try(writeStatas(datas,"daily",select=ii)) # only write the stata files if truly changed!
+        try(writeStatas(datas,"daily",select=ii,basepath=basepath)) # only write the stata files if truly changed!
         ## copy these to output place somewhere determined by defaults-local.txt
-        system(paste("cp ",statafile," ",getOption("tempmomo")$all$out$dir,sep=""))
+        system(paste("cp ",statafile," ",tempoption("all","out","dir","."),sep=""))
     } else {
         cat(as.character(Sys.time()),":",i," Stata already done\n")
     }
