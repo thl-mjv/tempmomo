@@ -51,7 +51,13 @@ dothese<-names(times)
 for(i in dothese) {
     cat(as.character(Sys.time()),":",i,"START --------------------------------------\n")
     savefile<-paste(basepath,"/download/",i,".rda",sep="")
-    if(file.exists(savefile)) old<-readRDS(savefile) else old<-NULL
+    if(file.exists(savefile)) {
+	cat("reding old ",savefile,"\n")
+	old<-try(readRDS(savefile))
+	if(inherits(old,"try-error")) old<-NULL
+    } else {
+	old<-NULL
+    }
     ii<-tolower(i)
     if(!is.null(old)) {
         cat(as.character(Sys.time()),":",i,"exists!\n")
