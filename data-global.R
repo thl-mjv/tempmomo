@@ -34,7 +34,7 @@ if(!file.exists(basepath)) basepath<-"."
 ## TODO (20150109) Make sure end of year goes smoothly
 print(use.this.year<-tempoption("all","years","this",FALSE)) # DONE: from defaults
 print(use.lag      <-tempoption("all","years","lag" ,1    )) # DONE: from defaults getOption("tempmomo")$all$years$lag)  # DONE: from defaults
-print(years<-as.numeric(format(Sys.Date(),"%Y"))-8:(!use.this.year))
+print(years<-as.numeric(format(Sys.Date(),"%Y"))-11:(!use.this.year)) # TODO: start/length from defaults
 print(basepath     <-tempoption("all","download","dir","./"))# DONE: from defaults
 ## Files we already got
 files<-list.files(path=paste0(basepath,"/download/"),patt=".rda",full=TRUE)
