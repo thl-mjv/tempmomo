@@ -500,6 +500,8 @@ writeStatas<-function(data,name=NULL,select=NULL,stata=NULL,basepath="./") {
                 cmd<-paste(stata," -bq \"do ",dodofile,";exit\"", sep = "")
                 cat(cmd,"\n")
                 system(cmd)
+            } else {
+                cat("Stata not found!\n")
             }
         }
     }
